@@ -1,0 +1,244 @@
+Put your HTML text here<!DOCTYPE html>
+<html>
+<head>
+<title>Ultimate Comparative & Superlative Game</title>
+<style>
+    body {
+        font-family: "Comic Sans MS", Arial;
+        background: linear-gradient(135deg, #dfe9ff, #fef6ff);
+        padding: 30px;
+        overflow-x: hidden;
+    }
+
+    h1 {
+        text-align: center;
+        color: #3f5eff;
+        text-shadow: 2px 2px #c8d0ff;
+        animation: pop 1.5s ease-in-out;
+    }
+
+    @keyframes pop {
+        0% { transform: scale(0.7); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .game-box {
+        background: white;
+        border-radius: 20px;
+        padding: 25px;
+        max-width: 800px;
+        margin: auto;
+        box-shadow: 0 0 25px rgba(0,0,0,0.15);
+        border: 5px solid #748aff;
+        animation: slideIn 1s ease;
+    }
+
+    @keyframes slideIn {
+        from { transform: translateY(40px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    .question {
+        margin-bottom: 20px;
+        padding: 10px;
+        background: #eef2ff;
+        border-radius: 10px;
+        border-left: 6px solid #4a68ff;
+        transition: 0.3s;
+    }
+
+    .question:hover {
+        background: #e2e7ff;
+        transform: scale(1.02);
+    }
+
+    input {
+        padding: 6px;
+        border-radius: 5px;
+        border: 2px solid #4a68ff;
+        width: 230px;
+    }
+
+    button {
+        width: 100%;
+        background: linear-gradient(135deg, #6c82ff, #4858e8);
+        color: white;
+        padding: 12px;
+        font-size: 20px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        margin-top: 20px;
+        box-shadow: 0 4px #333ec9;
+        transition: 0.2s;
+    }
+
+    button:hover {
+        background: #7d90ff;
+        transform: scale(1.03);
+    }
+
+    #timer {
+        text-align: center;
+        font-size: 24px;
+        color: #d13636;
+        margin-bottom: 20px;
+        font-weight: bold;
+    }
+
+    #result {
+        font-size: 32px;
+        text-align: center;
+        margin-top: 20px;
+        min-height: 40px;
+    }
+
+    #badge {
+        text-align: center;
+        font-size: 40px;
+        margin-top: 10px;
+    }
+
+    .stars {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        background: gold;
+        border-radius: 50%;
+        animation: fall 3s linear infinite;
+        opacity: 0.8;
+    }
+
+    @keyframes fall {
+        from { transform: translateY(-10px) rotate(0); }
+        to { transform: translateY(800px) rotate(360deg); }
+    }
+</style>
+</head>
+<body>
+
+<h1>🌟 Ultimate Comparative & Superlative Challenge 🌟</h1>
+
+<div id="timer">⏱ Time left: <span id="time">45</span> seconds</div>
+
+<div class="game-box" id="gameBox">
+
+<div id="questionContainer"></div>
+
+<button onclick="checkAnswers()">Submit Answers</button>
+
+<div id="result"></div>
+<div id="badge"></div>
+<button onclick="location.reload()">🔄 Play Again</button>
+
+</div>
+
+<!-- Sounds -->
+<audio id="correctSound" src="https://assets.mixkit.co/active_storage/sfx/2010/2010-preview.mp3"></audio>
+<audio id="wrongSound" src="https://assets.mixkit.co/active_storage/sfx/2006/2006-preview.mp3"></audio>
+
+<!-- Confetti -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script>
+// ----------------------------
+// STAR BACKGROUND DECORATION
+// ----------------------------
+for (let i = 0; i < 25; i++) {
+    let star = document.createElement("div");
+    star.classList.add("stars");
+    star.style.left = Math.random() * window.innerWidth + "px";
+    star.style.animationDelay = Math.random() * 5 + "s";
+    star.style.animationDuration = 2 + Math.random() * 3 + "s";
+    document.body.appendChild(star);
+}
+
+// ----------------------------
+// RANDOM QUESTIONS
+// ----------------------------
+const questionBank = [
+    { q: "My brother is __________ (tall) than me.", a: "taller" },
+    { q: "She is the __________ (happy) person I know.", a: "happiest" },
+    { q: "This exercise is __________ (easy) than yesterday’s.", a: "easier" },
+    { q: "A cheetah is __________ (fast) than a lion.", a: "faster" },
+    { q: "That was the __________ (bad) day of my life.", a: "worst" },
+    { q: "His house is __________ (big) than mine.", a: "bigger" },
+    { q: "She is the __________ (smart) student in the class.", a: "smartest" },
+    { q: "This book is __________ (interesting) than the movie.", a: "more interesting" },
+    { q: "February is the __________ (short) month of the year.", a: "shortest" },
+    { q: "My dog is __________ (young) than my cat.", a: "younger" },
+    { q: "Mount Everest is the __________ (high) mountain.", a: "highest" },
+    { q: "Your joke was __________ (funny) than mine.", a: "funnier" }
+];
+
+// shuffle
+const selectedQuestions = questionBank.sort(() => 0.5 - Math.random()).slice(0, 10);
+
+// display
+const container = document.getElementById("questionContainer");
+selectedQuestions.forEach((item, index) => {
+    container.innerHTML += `
+        <div class="question">
+            ${index + 1}. ${item.q}<br>
+            <input id="q${index}">
+        </div>
+    `;
+});
+
+// ----------------------------
+// TIMER
+// ----------------------------
+let time = 45;
+const timerInterval = setInterval(() => {
+    time--;
+    document.getElementById("time").textContent = time;
+    if (time <= 0) {
+        clearInterval(timerInterval);
+        checkAnswers();
+    }
+}, 1000);
+
+// ----------------------------
+// CHECK ANSWERS
+// ----------------------------
+function checkAnswers() {
+    clearInterval(timerInterval);
+
+    let correct = 0;
+    const correctSound = document.getElementById("correctSound");
+    const wrongSound = document.getElementById("wrongSound");
+
+    selectedQuestions.forEach((item, i) => {
+        let ans = document.getElementById("q" + i).value.trim().toLowerCase();
+        if (ans === item.a) correct++;
+    });
+
+    const result = document.getElementById("result");
+    const badge = document.getElementById("badge");
+
+    if (correct === 10) {
+        result.textContent = "🎉 PERFECT SCORE! You're an English Master! 🎉";
+        correctSound.play();
+        badge.textContent = "🏅 GOLD BADGE 🏅";
+
+        confetti({ particleCount: 300, spread: 120 });
+        confetti({ particleCount: 300, spread: 120, origin: { y: 0.3 } });
+
+    } else if (correct >= 7) {
+        result.textContent = `👏 Great job! You scored ${correct}/10`;
+        correctSound.play();
+        badge.textContent = "🥈 SILVER BADGE 🥈";
+    } else if (correct >= 5) {
+        result.textContent = `🙂 Not bad! You scored ${correct}/10`;
+        wrongSound.play();
+        badge.textContent = "🥉 BRONZE BADGE 🥉";
+    } else {
+        result.textContent = `😢 You scored ${correct}/10. Try again!`;
+        wrongSound.play();
+        badge.textContent = "💔 Keep practicing!";
+    }
+}
+</script>
+
+</body>
+</html>
